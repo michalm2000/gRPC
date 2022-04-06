@@ -1,0 +1,32 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option java_outer_classname = "GRPCAppProto";
+option objc_class_prefix = "GAP";
+import "google/protobuf/empty.proto";
+
+service GrpcService {
+  rpc grpcProcedure (GrpcRequest) returns (GrpcResponse) {}
+  rpc saveCD (CD) returns (GrpcResponse) {}
+  rpc getCDbyTitle (GrpcResponse) returns (CD) {}
+  rpc getCDs (google.protobuf.Empty)  returns (CDs) {}
+}
+
+message GrpcRequest {
+  string name = 1;
+  int32 age = 2;
+}
+
+message GrpcResponse {
+  string message = 1;
+}
+
+message CD {
+  string author = 1;
+  string title = 2;
+  int32 songsCount = 3;
+  string label = 4;
+}
+
+message CDs{
+  repeated CD cds = 1;
+}
