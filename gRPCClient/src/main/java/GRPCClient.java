@@ -140,17 +140,7 @@ public class GRPCClient {
                         System.out.println("Invalid arguments");
                     }
                     break;
-
-
-//                    Iterator<SongLine> songLines = stub.getSongText(Empty.newBuilder().build());
-//                    List<String> text = new ArrayList<>();
-//                    while (songLines.hasNext()){
-//                        SongLine line = songLines.next();
-//                        System.out.println(line.getLineNumber() + "/" + line.getAllLines());
-//                        text.add(line.getLine());
-//                    }
-//                    return text;
-
+                    
                 default:
                     return "Command does not exist";
 
