@@ -9,6 +9,8 @@ service GrpcService {
   rpc saveCD (CD) returns (GrpcResponse) {}
   rpc getCDbyTitle (GrpcResponse) returns (CD) {}
   rpc getCDs (google.protobuf.Empty)  returns (CDs) {}
+  rpc getCDsAsync (google.protobuf.Empty) returns (CDs);
+  rpc getSongText(stream SongLineGetter) returns (stream SongLine) {}
 }
 
 message GrpcRequest {
@@ -30,3 +32,17 @@ message CD {
 message CDs{
   repeated CD cds = 1;
 }
+
+message SongLine{
+  string line = 1;
+  int32 lineNumber = 2;
+  int32 allLines = 3;
+
+}
+
+message SongLineGetter {
+  int32 lineNumber = 2;
+}
+
+
+

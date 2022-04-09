@@ -1,0 +1,4 @@
+# Project exclude paths
+/gRPCClient/target/
+/gRPCInterface/target/
+/gRPCServer/target/
