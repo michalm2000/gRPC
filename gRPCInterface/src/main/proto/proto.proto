@@ -9,8 +9,9 @@ service GrpcService {
   rpc saveCD (CD) returns (GrpcResponse) {}
   rpc getCDbyTitle (GrpcResponse) returns (CD) {}
   rpc getCDs (google.protobuf.Empty)  returns (CDs) {}
-  rpc getCDsAsync (google.protobuf.Empty) returns (CDs);
+  rpc getCDsAsync (google.protobuf.Empty) returns (CDs) {}
   rpc getSongText(stream SongLineGetter) returns (stream SongLine) {}
+  rpc upload (stream FileUploadRequest) returns (stream FileUploadResponse) {}
 }
 
 message GrpcRequest {
@@ -41,8 +42,39 @@ message SongLine{
 }
 
 message SongLineGetter {
-  int32 lineNumber = 2;
+  int32 lineNumber = 1;
 }
+
+message MetaData {
+  string name = 1;
+  string type = 2;
+}
+
+message File {
+  bytes content = 1;
+}
+
+enum Status {
+  PENDING = 0;
+  IN_PROGRESS = 1;
+  SUCCESS = 2;
+  FAILED = 3;
+}
+
+message FileUploadRequest {
+  oneof request {
+    MetaData metadata = 1;
+    File file = 2;
+
+  }
+}
+
+message FileUploadResponse {
+  string name = 1;
+  Status status = 2;
+}
+
+
 
 
 

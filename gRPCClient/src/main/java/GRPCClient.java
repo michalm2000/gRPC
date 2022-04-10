@@ -1,9 +1,15 @@
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class GRPCClient {
     public static void main(String[] args) {
@@ -140,7 +146,47 @@ public class GRPCClient {
                         System.out.println("Invalid arguments");
                     }
                     break;
-                    
+
+                case "upload":
+                    StreamObserver<FileUploadResponse> responseObserver3 = new StreamObserver<FileUploadResponse>() {
+                        @Override
+                        public void onNext(FileUploadResponse fileUploadResponse) {
+                            System.out.println(
+                                    "File upload status :: " + fileUploadResponse.getStatus()
+                            );
+                        }
+
+                        @Override
+                        public void onError(Throwable throwable) {
+
+                        }
+
+                        @Override
+                        public void onCompleted() {
+
+                        }
+                    };
+                    StreamObserver<FileUploadRequest> requestObserver3 = nonBlockingStub.upload(responseObserver3);
+                    Path path = Paths.get("C:\\Users\\michaldes\\IdeaProjects\\gRPC\\gRPCClient\\src\\main\\resources\\Images\\hour.jpg");
+                    FileUploadRequest metadata = FileUploadRequest.newBuilder()
+                            .setMetadata(
+                                    MetaData.newBuilder().setName("file").setType("jpg").build()
+                            ).build();
+                    requestObserver3.onNext(metadata);
+
+                    InputStream inputStream = Files.newInputStream(path);
+                    byte[] bytes = new byte[4096];
+                    int size;
+                    while ((size = inputStream.read(bytes)) > 0){
+                        FileUploadRequest uploadRequest = FileUploadRequest.newBuilder()
+                                .setFile(File.newBuilder().setContent(ByteString.copyFrom(bytes, 0, size)).build())
+                                .build();
+                        requestObserver3.onNext(uploadRequest);
+                    }
+                    inputStream.close();
+                    requestObserver3.onCompleted();
+                    break;
+
                 default:
                     return "Command does not exist";
 

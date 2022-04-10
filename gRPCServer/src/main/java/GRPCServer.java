@@ -1,12 +1,14 @@
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class GRPCServer {
     }
 
     static class GrpcServerImpl extends GrpcServiceGrpc.GrpcServiceImplBase {
+        private static final Path SERVER_BASE_PATH = Paths.get("C:\\Users\\michaldes\\IdeaProjects\\gRPC\\gRPCServer\\src\\main\\resources\\Images");
         private List<CD> cdList;
         private List<String> songText;
 
@@ -117,6 +120,64 @@ public class GRPCServer {
                 e.printStackTrace();
             }
         }
+
+        @Override
+        public StreamObserver<FileUploadRequest> upload(StreamObserver<FileUploadResponse> responseObserver) {
+            return new StreamObserver<FileUploadRequest>() {
+                OutputStream writer;
+                Status status = Status.IN_PROGRESS;
+                @Override
+                public void onNext(FileUploadRequest fileUploadRequest) {
+                    try{
+                        if(fileUploadRequest.hasMetadata()){
+                            writer = getFilePath(fileUploadRequest);
+                        }else{
+                            writeFile(writer, fileUploadRequest.getFile().getContent());
+                            FileUploadResponse response = FileUploadResponse.newBuilder().setStatus(status).build();
+                            responseObserver.onNext(response);
+                        }
+                    }catch (IOException e){
+                        this.onError(e);
+                    }
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    status = Status.FAILED;
+                    this.onCompleted();
+                }
+
+                @Override
+                public void onCompleted() {
+                    closeFile(writer);
+                    status = Status.IN_PROGRESS.equals(status) ? Status.SUCCESS : status;
+                    FileUploadResponse response = FileUploadResponse.newBuilder()
+                            .setStatus(status)
+                            .build();
+                    responseObserver.onNext(response);
+                    responseObserver.onCompleted();
+                }
+                private OutputStream getFilePath(FileUploadRequest request) throws IOException {
+                    var fileName = request.getMetadata().getName() + "." + request.getMetadata().getType();
+                    return Files.newOutputStream(SERVER_BASE_PATH.resolve(fileName), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                }
+
+                private void writeFile(OutputStream writer, ByteString content) throws IOException {
+                    writer.write(content.toByteArray());
+                    writer.flush();
+                }
+
+                private void closeFile(OutputStream writer){
+                    try {
+                        writer.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+        }
     }
+
 
 }
